@@ -1,5 +1,5 @@
 ## Environment
-Ubuntu 20.04.6, Python 3.8, Pytorch=2.1.1. CUDA 12.2
+Ubuntu 20.04.6, Python 3.8, Pytorch=2.1.1. CUDA 12.2 /n
 Ultralytics https://github.com/ultralytics/ultralytics
 
 ## Evaluating a model
