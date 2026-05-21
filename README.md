@@ -7,6 +7,7 @@ Ultralytics https://github.com/ultralytics/ultralytics
 #You can obtain the model validation results, model parameters, and more
 
 #best.pt and last.pt is the training result of our model
+
 python val.py
 
 ## Predicted image
