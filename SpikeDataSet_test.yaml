@@ -1,0 +1,5 @@
+train: "/home/wjs/wjs/MPRT-DETR/demo_data/images/train"
+val: "/home/wjs/wjs/MPRT-DETR/demo_data/images/val"
+test: "/home/wjs/wjs/MPRT-DETR/demo_data/images/test"
+nc: 1
+names: ['spike']

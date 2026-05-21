@@ -1,0 +1,63 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# RT-DETR-l object detection model with P3-P5 outputs. For details see https://docs.ultralytics.com/models/rtdetr
+ 
+# Parameters
+nc: 1  # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolov8n-cls.yaml' will call yolov8-cls.yaml with scale 'n'
+  # [depth, width, max_channels]
+#  n: [0.33, 0.25, 512]
+  s: [0.33, 0.50, 512]
+#  m: [0.67, 0.75, 512]
+#  l: [1.00, 1.00, 1024]
+#  x: [1.33, 1.25, 512]
+ 
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, FasterNet, []]  # 4
+
+head:
+  - [-1, 1, Conv, [256, 1, 1, None, 1, 1, False]]  # 5 input_proj.2
+  - [-1, 1, AIFI, [1024, 8]]  # 6
+
+  # 四层特征通道调整
+  - [1, 1, Conv, [256]]  # 7-P2/4 (160x160) - 新增P2层
+  - [2, 1, Conv, [256]]  # 8-P3/8 (80x80)
+  - [3, 1, Conv, [256]]  # 9-P4/16 (40x40)
+  - [6, 1, Conv, [256]]  # 10-P5/32 (20x20)
+
+  # ============ 四层BiFPN融合 ============
+
+  # 第一级: P5 -> P4 融合
+  - [-1, 1, Dy_Sample, []]  # 11 (P5上采样到P4尺度)
+  - [[-1, 9], 1, Bi_FPN, []]  # 12 (融合上采样P5和原始P4)
+  - [-1, 3, RepNCSPELAN4, [256]]  # 13-融合后P4
+
+  # 第二级: P4 -> P3 融合
+  - [-1, 1, Dy_Sample, []]  # 14 (融合后P4上采样到P3尺度)
+  - [[-1, 8], 1, Bi_FPN, []]  # 15 (融合上采样P4和原始P3)
+  - [-1, 3, RepNCSPELAN4, [256]]  # 16-融合后P3
+
+  # 第三级: P3 -> P2 融合
+  - [-1, 1, Dy_Sample, []]  # 17 (融合后P3上采样到P2尺度)
+  - [[-1, 7], 1, Bi_FPN, []]  # 18 (融合上采样P3和原始P2)
+  - [-1, 3, RepNCSPELAN4, [256]]  # 19-融合后P2
+
+  # ============ 自下而上路径 ============
+
+  # 第四级: P2 -> P3 融合 (自下而上)
+  - [-1, 1, ADown, [256]]  # 20 (融合后P2下采样到P3尺度)
+  - [[-1, 16], 1, Bi_FPN, []]  # 21 (融合下采样P2和融合后P3)
+  - [-1, 3, RepNCSPELAN4, [256]]  # 22-精炼后P3
+
+  # 第五级: P3 -> P4 融合 (自下而上)
+  - [-1, 1, ADown, [256]]  # 23 (精炼后P3下采样到P4尺度)
+  - [[-1, 13], 1, Bi_FPN, []]  # 24 (融合下采样P3和融合后P4)
+  - [-1, 3, RepNCSPELAN4, [256]]  # 25-精炼后P4
+
+  # 第六级: P4 -> P5 融合 (自下而上)
+  - [-1, 1, ADown, [256]]  # 26 (精炼后P4下采样到P5尺度)
+  - [[-1, 10], 1, Bi_FPN, []]  # 27 (融合下采样P4和原始P5)
+  - [-1, 3, RepNCSPELAN4, [256]]  # 28-精炼后P5
+
+  # 检测头 - 使用所有四层精炼后的特征
+  - [[19, 22, 25, 28], 1, RTDETRDecoder, [nc, 256, 1000, 4, 8, 3]]  # 29

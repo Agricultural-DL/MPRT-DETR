@@ -1,0 +1,3 @@
+# ninja log v5
+0	30690	1733148578154283564	/home/wjs/wjs/ultralytics-improved2/ultralytics/nn/rpe_ops/build/temp.linux-x86_64-cpython-38/rpe_index.o	8a62ee038b0c2ea2
+0	54947	1733148602440472477	/home/wjs/wjs/ultralytics-improved2/ultralytics/nn/rpe_ops/build/temp.linux-x86_64-cpython-38/rpe_index_cuda.o	e22ecce7bccec7a6

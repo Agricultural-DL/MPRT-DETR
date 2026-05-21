@@ -1,0 +1,45 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# RT-DETR-l object detection model with P3-P5 outputs. For details see https://docs.ultralytics.com/models/rtdetr
+ 
+# Parameters
+nc: 1  # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolov8n-cls.yaml' will call yolov8-cls.yaml with scale 'n'
+  # [depth, width, max_channels]
+#  n: [0.33, 0.25, 512]
+  s: [0.33, 0.50, 512]
+#  m: [0.67, 0.75, 512]
+#  l: [1.00, 1.00, 1024]
+#  x: [1.33, 1.25, 512]
+ 
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, IAT, []]
+  - [-1, 1, FasterNet_A, []]  # 5
+ 
+head:
+  - [-1, 1, Conv, [256, 1, 1, None, 1, 1, False]]  # 6 input_proj.2
+  - [-1, 1, AIFI, [1024, 8]]  # 7
+
+  - [ 3, 1, Conv, [ 256 ] ]  # 12-P3/8 8 80
+  - [ 4, 1, Conv, [ 256 ] ]  # 13-P4/16 9 40
+  - [ 7, 1, Conv, [ 256 ] ]  # 14-P5/32 10 20
+
+  #- [-1, 1, Dy_Sample, []] # 8
+  - [-1, 1, Dy_Sample, []] # 8 11
+  - [ [ -1, 9], 1, Bi_FPN, [ ] ] # 16 12
+  - [ -1, 3, RepC3, [ 256, 0.5] ] # 17-P4/16  13
+
+  #- [-1, 1, Dy_Sample, []] # 8
+  - [-1, 1, Dy_Sample, []] # 8  14
+  - [ [ -1, 8], 1, Bi_FPN, [ ] ] # 19  15
+  - [ -1, 3, RepC3, [ 256, 0.5] ] # 20-P3/8  16
+
+  - [-1, 1, ADown, [256]]     #17
+  - [ [ -1, 9, 13], 1, Bi_FPN, [ ] ] # 25  18
+  - [ -1, 3, RepC3, [ 256, 0.5] ] # 26-P4/16  19
+
+  - [-1, 1, ADown, [256]]      #20
+  - [ [ -1, 10], 1, Bi_FPN, [ ] ] # 28   21
+  - [ -1, 3, RepC3, [ 256, 0.5] ] # 29-P5/32  22
+
+  - [[16, 19, 22], 1, RTDETRDecoder, [nc, 256, 1000, 4, 8, 3]]  # Detect(P3, P4, P5)
